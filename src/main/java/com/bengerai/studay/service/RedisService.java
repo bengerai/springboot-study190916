@@ -40,4 +40,5 @@ public class RedisService {
 
         return (User) redisTemplate.opsForValue().get(key);
     }
+
 }

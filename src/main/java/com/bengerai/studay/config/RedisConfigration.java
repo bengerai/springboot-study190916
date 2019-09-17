@@ -3,15 +3,19 @@ package com.bengerai.studay.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import java.time.Duration;
 
 /**
  * redis配置类，实现自定义序列化.
@@ -22,9 +26,26 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfigration extends CachingConfigurerSupport {
 
     /**
-     *
-     * @param redisConnectionFactory
-     * @return
+     * 创建CacheManager缓存管理器.
+     * @param factory redis工厂
+     * @return CacheManager实例
+     */
+    @Bean
+    public CacheManager cacheManager(final RedisConnectionFactory factory) {
+
+        final RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofSeconds(120)).disableCachingNullValues();
+
+        return RedisCacheManager.builder(factory)
+                .cacheDefaults(configuration)
+                .transactionAware()
+                .build();
+    }
+
+    /**
+     * 创建RedisTemplate 并添加RedisSerializer序列化.
+     * @param redisConnectionFactory redis工厂
+     * @return RedisTemplate实例
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(final RedisConnectionFactory redisConnectionFactory) {
